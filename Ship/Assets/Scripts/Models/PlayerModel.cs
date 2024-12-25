@@ -101,14 +101,14 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
     [UsedImplicitly]
     private void OnEnable()
     {
-        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerMoveEvent>(this, OnPlayerMoved);
+        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerMoveEvent>(gameObject, OnPlayerMoved);
     }
 
 
     [UsedImplicitly]
     private void OnDisable()
     {
-        LevelManager.PlayerEventBus.UnsubscribeFromTarget<PlayerMoveEvent>(this, OnPlayerMoved);
+        LevelManager.PlayerEventBus.UnsubscribeFromTarget<PlayerMoveEvent>(gameObject, OnPlayerMoved);
     }
 
     [UsedImplicitly]
@@ -140,7 +140,7 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
 
     #region Event Handlers
 
-    private void OnPlayerMoved(ref PlayerMoveEvent eventData, PlayerModel target, PlayerModel source)
+    private void OnPlayerMoved(ref PlayerMoveEvent eventData, GameObject target, GameObject source)
     {
         Direction = eventData.Direction;
     }

@@ -81,9 +81,28 @@ public class PlayerController : MonoBehaviour
     public void OnMovement(InputValue value)
     {
         var rawInput = value.Get<Vector2>();
-        LevelManager.PlayerEventBus.Raise(
-            new PlayerMoveEvent { Direction = new Vector3(rawInput.x, 0, rawInput.y) },
-            m_playerModel, null);
+
+        Vector3 cameraForward = m_cameraTransform.forward;
+        Vector3 cameraRight = m_cameraTransform.right;
+
+        cameraForward.y = 0;
+        cameraRight.y = 0;
+
+        cameraForward.Normalize();
+        cameraRight.Normalize();
+
+        Vector3 inputDirection = cameraRight * rawInput.x + cameraForward * rawInput.y;
+
+        LevelManager.PlayerEventBus.Raise(new PlayerMoveEvent { Direction = inputDirection }, gameObject, null);
+    }
+
+    // Handles the OnLook event triggered by continuous input.
+    // This method is invoked via SendMessage to process player look input.
+    [UsedImplicitly]
+    public void OnLook(InputValue value)
+    {
+        var delta = value.Get<Vector2>();
+        LevelManager.PlayerEventBus.Raise(new PlayerLookEvent { Delta = delta }, gameObject, null);
     }
 
     #endregion

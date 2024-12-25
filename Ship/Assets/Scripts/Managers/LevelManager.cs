@@ -13,7 +13,7 @@ public class LevelManager : SingletonBehaviour<LevelManager>
     #region API
 
     public static GenericEventBus<IEvent> EventBus { get; } = new();
-    public static GenericEventBus<IEvent, PlayerModel> PlayerEventBus { get; } = new();
+    public static GenericEventBus<IEvent, GameObject> PlayerEventBus { get; } = new();
 
     #endregion
 
