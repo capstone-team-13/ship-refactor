@@ -1,3 +1,4 @@
+using System.Collections;
 using JetBrains.Annotations;
 using System.Linq;
 using UnityEngine;
@@ -22,14 +23,38 @@ public class PlayerController : MonoBehaviour
 
     #region Editor API
 
-    [SerializeField] PlayerModel m_playerModel;
+    [Header("Player Components")] [SerializeField]
+    private PlayerModel m_playerModel;
+
     [SerializeField] private PlayerInput m_playerInput;
     [SerializeField] private Rigidbody m_rigidbody;
-    [SerializeField] Transform m_cameraTransform;
+
+    [Header("Camera and Transform")] [SerializeField]
+    private Transform m_cameraTransform;
+
+    [Header("Ground Check")] [SerializeField]
+    private GroundChecker m_groundChecker;
 
     #endregion
 
     #region Unity Callbacks
+
+    private void OnEnable()
+    {
+        if (m_playerInput != null)
+        {
+            m_playerInput.actions[PlayerActions.JUMP].performed += OnJumpPerformed;
+        }
+    }
+
+    [UsedImplicitly]
+    private void OnDisable()
+    {
+        if (m_playerInput != null)
+        {
+            m_playerInput.actions[PlayerActions.JUMP].performed -= OnJumpPerformed;
+        }
+    }
 
     [UsedImplicitly]
     private void OnValidate()
@@ -68,6 +93,7 @@ public class PlayerController : MonoBehaviour
         PlayerModel model = m_playerModel;
         if (model.IsDead) return;
         Vector3 newVelocity = model.Direction * model.Speed;
+        newVelocity.y = m_rigidbody.velocity.y;
         m_rigidbody.velocity = newVelocity;
     }
 
@@ -103,6 +129,37 @@ public class PlayerController : MonoBehaviour
     {
         var delta = value.Get<Vector2>();
         LevelManager.PlayerEventBus.Raise(new PlayerLookEvent { Delta = delta }, gameObject, null);
+    }
+
+    [UsedImplicitly]
+    public void OnJumpPerformed(InputAction.CallbackContext context)
+    {
+        if (m_groundChecker.IsGrounded) m_playerModel.ResetJumpCount();
+        if (__M_CanJump()) StartCoroutine(__M_Jump());
+    }
+
+    private bool __M_CanJump()
+    {
+        return m_playerModel.JumpCount > 0;
+    }
+
+    private IEnumerator __M_Jump()
+    {
+        PlayerModel model = m_playerModel;
+        model.HandleJump();
+
+        // Reset Y Velocity
+        Vector3 velocity = m_rigidbody.velocity;
+        velocity.y = 0;
+        m_rigidbody.velocity = velocity;
+        m_rigidbody.AddForce(model.JumpForce, ForceMode.Impulse);
+
+        LevelManager.PlayerEventBus.Raise(new PlayerJumpEvent(), gameObject, null);
+
+        yield return new WaitForEndOfFrame();
+
+        --model.JumpCount;
+        model.JumpPressed = false;
     }
 
     #endregion

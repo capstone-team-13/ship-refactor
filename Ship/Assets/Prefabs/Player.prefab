@@ -348,6 +348,88 @@ MonoBehaviour:
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
+--- !u!1 &3333434383435655616
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7995554918322089402}
+  - component: {fileID: 8424492750048446246}
+  m_Layer: 0
+  m_Name: Ground Checker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7995554918322089402
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3333434383435655616}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6575673260827775994}
+  m_Father: {fileID: 213273889667572095}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8424492750048446246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3333434383435655616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1aca3997b05fc74d8bdda279be97d9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_rayOrigin: {fileID: 6575673260827775994}
+  m_rayDirection: {x: 0, y: -1, z: 0}
+  m_rayLength: 0.25
+  m_groundLayer:
+    serializedVersion: 2
+    m_Bits: 8
+--- !u!1 &4282567621970733183
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6575673260827775994}
+  m_Layer: 0
+  m_Name: Ray Origin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6575673260827775994
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4282567621970733183}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7995554918322089402}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5812711855922851528
 GameObject:
   m_ObjectHideFlags: 0
@@ -640,6 +722,7 @@ Transform:
   - {fileID: 3564150420110681706}
   - {fileID: 3978548566764905002}
   - {fileID: 247781538047754780}
+  - {fileID: 7995554918322089402}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &4387320915995938748
@@ -654,12 +737,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be73cb326ae68214e86b4c24a876ef86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Index: 0
   m_maxHealth: 5
   m_mana: 0
   m_maxMana: 100
   Speed: 5
   Direction: {x: 0, y: 0, z: 0}
+  MaxJumpCount: 2
+  MaxJumpForce: {x: 0, y: 24, z: 0}
+  JumpForceDecayRate: 0.75
 --- !u!114 &2338426279013423973
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -676,6 +761,7 @@ MonoBehaviour:
   m_playerInput: {fileID: 50805658027627002}
   m_rigidbody: {fileID: 3574415254554304046}
   m_cameraTransform: {fileID: 3564150420110681706}
+  m_groundChecker: {fileID: 8424492750048446246}
 --- !u!114 &50805658027627002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -760,7 +846,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8410323312778362160}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 5
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}

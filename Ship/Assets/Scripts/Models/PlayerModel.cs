@@ -18,8 +18,6 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
 
     public ModifierApplierController ModifierApplierController { get; private set; }
 
-    public int Index;
-
     [Header("Health")]
     [SerializeField]
     [Tooltip("Maximum health of the player. This value determines the player's health cap.")]
@@ -27,7 +25,6 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
 
     public float Health { get; set; }
 
-    [Tooltip("max health of the player")]
     public float MaxHealth
     {
         get => m_maxHealth;
@@ -42,9 +39,15 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
     [SerializeField] [Tooltip("The player's maximum mana. Determines the upper limit for the mana pool.")]
     private float m_maxMana;
 
-
     [Header("Movement")] public float Speed;
     public Vector3 Direction;
+
+    [Header("HandleJump")] public int MaxJumpCount;
+    public int JumpCount { get; set; }
+    public Vector3 JumpForce { get; set; }
+    public Vector3 MaxJumpForce;
+    [Range(0f, 1f)] public float JumpForceDecayRate = 0.5f;
+    public bool JumpPressed { get; set; }
 
     public float Mana
     {
@@ -126,6 +129,8 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
         }
 
         StatusEffectController = new StatusEffectController();
+
+        ResetJumpCount();
     }
 
     [UsedImplicitly]
@@ -137,6 +142,19 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
     }
 
     #endregion
+
+    public void ResetJumpCount()
+    {
+        JumpCount = MaxJumpCount;
+    }
+
+    public void HandleJump()
+    {
+        int power = MaxJumpCount - JumpCount;
+        float forceDecayFactor = Mathf.Pow(JumpForceDecayRate, power);
+        JumpForce = MaxJumpForce * forceDecayFactor;
+        JumpPressed = true;
+    }
 
     #region Event Handlers
 

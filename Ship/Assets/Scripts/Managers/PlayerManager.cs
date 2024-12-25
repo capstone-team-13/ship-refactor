@@ -53,9 +53,6 @@ public class PlayerManager : SingletonBehaviour<PlayerManager>
             if (m_players.Length > id) m_players[id] = player;
             else Debug.LogError($"Index {id} out of bounds for m_players array.");
 
-            // var playerController = player.GetComponent<PlayerController>();
-            // playerController.AssignIndex(player.playerIndex);
-
             m_players[id] = player;
 
             spawnPointId = ++spawnPointId % m_spawnPoints.Length;
