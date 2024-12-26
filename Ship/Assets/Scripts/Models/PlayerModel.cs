@@ -42,12 +42,14 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
     [Header("Movement")] public float Speed;
     public Vector3 Direction;
 
-    [Header("HandleJump")] public int MaxJumpCount;
+    [Header("Jump")] public int MaxJumpCount;
     public int JumpCount { get; set; }
     public Vector3 JumpForce { get; set; }
     public Vector3 MaxJumpForce;
     [Range(0f, 1f)] public float JumpForceDecayRate = 0.5f;
     public bool JumpPressed { get; set; }
+
+    [Header("Melee")] public float MeleeRadius = 3.0f;
 
     public float Mana
     {
@@ -118,6 +120,7 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
     protected void Awake()
     {
         ModifierController = ModifierControllerPool.Instance.Rent();
+
         ModifierApplierController = ModifierControllerPool.Instance.RentApplier();
 
         if (ModifierController == null || ModifierApplierController == null)

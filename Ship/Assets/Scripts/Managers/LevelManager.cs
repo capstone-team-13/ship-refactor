@@ -8,6 +8,8 @@ public class LevelManager : SingletonBehaviour<LevelManager>
     #region Editor API
 
     [SerializeField] private string m_levelName = "Level Name";
+    [SerializeField] private LayerMask m_entityLayer;
+    public LayerMask EntityLayer => m_entityLayer;
 
     public UnityEvent OnLevelStarted;
     public UnityEvent OnLevelEnded;

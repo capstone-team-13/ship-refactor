@@ -737,6 +737,7 @@ MonoBehaviour:
   MaxJumpCount: 2
   MaxJumpForce: {x: 0, y: 24, z: 0}
   JumpForceDecayRate: 0.75
+  MeleeRadius: 3
 --- !u!114 &2338426279013423973
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -752,6 +753,7 @@ MonoBehaviour:
   m_playerModel: {fileID: 4387320915995938748}
   m_playerInput: {fileID: 50805658027627002}
   m_rigidbody: {fileID: 3574415254554304046}
+  m_behaviourTree: {fileID: 4114089118689423719}
   m_cameraTransform: {fileID: 3564150420110681706}
   m_groundChecker: {fileID: 8424492750048446246}
 --- !u!114 &50805658027627002
@@ -827,9 +829,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentBlackboard: {fileID: 0}
-  _serializedBlackboard: '{"_variables":{}}'
-  _objectReferences: []
-  _serializedVariables: []
+  _serializedBlackboard: '{"_variables":{"RigidBody":{"_value":1,"_name":"RigidBody","_id":"3feff312-23aa-47b8-a015-c4937747e35c","$type":"NodeCanvas.Framework.Variable`1[[UnityEngine.Rigidbody,
+    UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"}}}'
+  _objectReferences:
+  - {fileID: 0}
+  - {fileID: 3574415254554304046}
+  _serializedVariables:
+  - _json: '{"_value":1,"_name":"RigidBody","_id":"3feff312-23aa-47b8-a015-c4937747e35c","$type":"NodeCanvas.Framework.Variable`1[[UnityEngine.Rigidbody,
+      UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]"}'
+    _references:
+    - {fileID: 0}
+    - {fileID: 3574415254554304046}
 --- !u!54 &3574415254554304046
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1042,6 +1052,56 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3978548566764905002}
     m_Modifications:
+    - target: {fileID: 543147756095479308, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 543147756095479308, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 543147756095479308, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 543147756095479308, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 543147756095479308, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3317758159920069096, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3317758159920069096, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3317758159920069096, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3317758159920069096, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3317758159920069096, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6588308531275188568, guid: acfc4cf47bb1e29468a0aab8af4d0a73,
         type: 3}
       propertyPath: m_Name

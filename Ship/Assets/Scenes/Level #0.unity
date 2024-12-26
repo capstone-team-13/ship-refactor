@@ -848,6 +848,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_levelName: Level #0
+  m_entityLayer:
+    serializedVersion: 2
+    m_Bits: 0
   OnLevelStarted:
     m_PersistentCalls:
       m_Calls:

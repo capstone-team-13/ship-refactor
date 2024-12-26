@@ -1,5 +1,6 @@
 using ModiBuff.Core;
 using ModiBuff.Core.Units;
+using TagType = ModiBuff.Core.Units.TagType;
 
 public static class Modifiers
 {
@@ -14,7 +15,7 @@ public static class Casts
 {
     public const string MELEE = "Melee";
     public const string STUN = "Stun";
-    public const string HEAL = "Heal";
+    public const string HEAL = "Self Healing";
 }
 
 public class MyModifierRecipes : ModifierRecipes
@@ -41,9 +42,18 @@ public class MyModifierRecipes : ModifierRecipes
                 .Effect(new DamageEffect(4), EffectOn.Init)
                 .Effect(new StatusEffectEffect(StatusEffectType.Stun, 2), EffectOn.Init).Remove(2).Refresh();
 
-            Add(Casts.HEAL, "Range Heal", "Heal player in range")
+            Add(Casts.HEAL, "Heal", "Self Healing")
                 .ApplyCondition(LegalAction.Act)
                 .Effect(new HealEffect(2), EffectOn.Init);
         }
+    }
+}
+
+public static class ModifierRecipeExtension
+{
+    public static ModifierRecipe LegalTarget(this ModifierRecipe recipe, LegalTarget target)
+    {
+        recipe.RemoveTag((ModiBuff.Core.TagType)TagType.LegalTargetAll);
+        return recipe.Tag(target.ToTagType());
     }
 }
