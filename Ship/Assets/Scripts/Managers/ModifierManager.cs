@@ -1,9 +1,9 @@
+using JetBrains.Annotations;
 using ModiBuff.Core;
+using UnityEngine;
 
 public class ModifierManager : SingletonBehaviour<ModifierManager>
 {
-    private ModifierIdManager m_modifierIdManager;
-
     private MyModifierRecipes m_modifierRecipes;
 
     // Singleton Instance
@@ -12,18 +12,24 @@ public class ModifierManager : SingletonBehaviour<ModifierManager>
     // Singleton Instance
     private ModifierControllerPool m_modifierControllerPool;
 
-    // Singleton Instance
-    private EffectTypeIdManager m_effectTypeIdManager;
+    private EffectIdManager m_effectIdManager;
 
+    // Singleton Instance
+    private ModifierLessEffects m_modifierLessEffects;
+
+    public ModifierIdManager ModifierIdManager { get; private set; }
+
+    [UsedImplicitly]
     protected override void Awake()
     {
         base.Awake();
 
-        m_effectTypeIdManager = new EffectTypeIdManager();
-        m_effectTypeIdManager.RegisterEffectTypes(typeof(DamageEffect), typeof(ManaGrowEffect));
+        m_effectIdManager = new EffectIdManager();
+        m_modifierLessEffects = new ModifierLessEffects(m_effectIdManager);
+        ModifierLessEffects.Instance.Finish();
 
-        m_modifierIdManager = new ModifierIdManager();
-        m_modifierRecipes = new MyModifierRecipes(m_modifierIdManager);
+        ModifierIdManager = new ModifierIdManager();
+        m_modifierRecipes = new MyModifierRecipes(ModifierIdManager);
 
         m_modifierPool = new ModifierPool(m_modifierRecipes);
 
@@ -34,7 +40,25 @@ public class ModifierManager : SingletonBehaviour<ModifierManager>
         ApplierType applierType, bool hasApplyChecks = false)
     {
         return owner.ModifierApplierController.TryAddApplier(
-            m_modifierIdManager.GetId(applierName), hasApplyChecks, applierType);
+            ModifierIdManager.GetId(applierName), hasApplyChecks, applierType);
+    }
+
+    public bool TryAddModifierLessEffect(string effectName, IEffect[] effects)
+    {
+        Debug.Log("@TryAddModifierLessEffect");
+        var result = ModifierLessEffects.Instance.Add(effectName, effects);
+
+        return result;
+    }
+
+    public void ApplyModifierLessEffect(int id, IUnit target, IUnit source)
+    {
+        ModifierLessEffects.Instance.Apply(id, target, source);
+    }
+
+    public void ApplyModifierLessEffectByName(string effectName, IUnit target, IUnit source)
+    {
+        ApplyModifierLessEffect(m_effectIdManager.GetId(effectName), target, source);
     }
 
     public bool TryAddApplier(ref IModifierApplierOwner owner, int id, ApplierType applierType,
@@ -45,28 +69,16 @@ public class ModifierManager : SingletonBehaviour<ModifierManager>
 
     public int GetModifierId(string applierName)
     {
-        return m_modifierIdManager.GetId(applierName);
+        return ModifierIdManager.GetId(applierName);
+    }
+
+    public int GetModifierLessEffectId(string effectName)
+    {
+        return m_effectIdManager.GetId(effectName);
     }
 
     public ModifierInfo GetModifierInfo(int id)
     {
         return m_modifierRecipes.GetModifierInfo(id);
     }
-
-    // private void Start()
-    // {
-    //     m_shipModel.ModifierApplierController.TryAddApplierByName(
-    //         m_modifierIdManager.GetId(Modifiers.DAMAGE_OVER_TIME), false, ApplierType.Cast);
-    //
-    //     m_shipModel.TryCast(modifierIds[0], m_shipModel);
-    //
-    //     var modifierIds = m_shipModel.ModifierApplierController.GetApplierCastModifierIds();
-    //     for (int i = 0; i < modifierIds.Count; i++)
-    //     {
-    //         ModifierInfo modifierInfo = m_modifierRecipes.GetModifierInfo(modifierIds[i]);
-    //         Debug.Log($"{i + 1} - {modifierInfo.DisplayName} - {modifierInfo.Description}");
-    //     }
-    //
-    //     m_shipModel.TryCast(modifierIds[0], m_shipModel);
-    // }
 }

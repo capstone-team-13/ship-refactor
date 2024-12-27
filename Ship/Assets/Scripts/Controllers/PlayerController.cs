@@ -1,12 +1,13 @@
 using JetBrains.Annotations;
 using ModiBuff.Core;
+using ModiBuff.Core.Units;
 using NodeCanvas.BehaviourTrees;
 using NodeCanvas.Framework;
 using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering.UI;
+using Vector2 = UnityEngine.Vector2;
 
 [RequireComponent(typeof(PlayerModel))]
 public class PlayerController : MonoBehaviour
@@ -21,7 +22,7 @@ public class PlayerController : MonoBehaviour
         public const string SHIELD = "Shield";
         public const string DIVINE_BOON = "Divine Boon";
         public const string SHOOT = "Shoot";
-        public const string HEALING_BOOST = "Energy Boost";
+        public const string HEALING_BOOST = "Healing Boost";
         public const string MANA_TRANSFER = "Energy Transfer";
     }
 
@@ -47,6 +48,7 @@ public class PlayerController : MonoBehaviour
 
     #region Unity Callbacks
 
+    [UsedImplicitly]
     private void OnEnable()
     {
         if (m_playerInput != null)
@@ -140,7 +142,7 @@ public class PlayerController : MonoBehaviour
     [UsedImplicitly]
     public void OnMovement(InputValue value)
     {
-        if (m_playerModel.IsDead) return;
+        if (!__M_CanMove() || m_playerModel.IsDead) return;
 
         var rawInput = value.Get<Vector2>();
 
@@ -167,7 +169,6 @@ public class PlayerController : MonoBehaviour
         LevelManager.PlayerEventBus.Raise(new PlayerLookEvent { Delta = delta }, gameObject, null);
     }
 
-    [UsedImplicitly]
     public void OnJumpPerformed(InputAction.CallbackContext context)
     {
         if (m_groundChecker.IsGrounded) m_playerModel.ResetJumpCount();
@@ -176,6 +177,8 @@ public class PlayerController : MonoBehaviour
 
     public void OnMeleePerformed(InputAction.CallbackContext context)
     {
+        if (!__M_CanCast()) return;
+
         StartCoroutine(__M_Melee());
 
         LayerMask entityLayer = LevelManager.Instance.EntityLayer;
@@ -192,17 +195,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private IEnumerator __M_Melee()
-    {
-        m_rigidbody.velocity = Vector3.zero;
-        m_behaviourTree.graph.blackboard.SetVariableValue("Melee Pressed", true);
-        yield return new WaitForSeconds(0.25f);
-        m_behaviourTree.graph.blackboard.SetVariableValue("Melee Pressed", false);
-    }
-
     public void OnPickOrThrowPerformed(InputAction.CallbackContext context)
     {
-        if (m_pickedObject == null)
+        if (m_pickedObject == null && __M_CanAct())
         {
             Debug.Log("Picked");
         }
@@ -214,16 +209,20 @@ public class PlayerController : MonoBehaviour
 
     public void OnShieldStarted(InputAction.CallbackContext context)
     {
+        if (!__M_CanAct()) return;
+        m_playerModel.Speed *= 0.5f;
         m_behaviourTree.graph.blackboard.SetVariableValue("Shielding", true);
     }
 
     public void OnShieldCanceled(InputAction.CallbackContext context)
     {
+        m_playerModel.Speed /= 0.5f;
         m_behaviourTree.graph.blackboard.SetVariableValue("Shielding", false);
     }
 
     public void OnShootStarted(InputAction.CallbackContext context)
     {
+        if (!__M_CanAct()) return;
         m_behaviourTree.graph.blackboard.SetVariableValue("Shooting", true);
     }
 
@@ -234,13 +233,33 @@ public class PlayerController : MonoBehaviour
 
     public void OnHealBoostPerformed(InputAction.CallbackContext context)
     {
-        int modifierId = ModifierManager.Instance.GetModifierId(Casts.HEAL);
+        if (!__M_CanCast()) return;
+        int modifierId = ModifierManager.Instance.GetModifierId(Casts.VITAL_SURGE);
         m_playerModel.TryCast(modifierId, m_playerModel);
     }
 
+    #endregion
+
+    #region Internals
+
     private bool __M_CanJump()
     {
-        return m_playerModel.JumpCount > 0;
+        return m_playerModel.JumpCount > 0 && __M_CanMove();
+    }
+
+    private bool __M_CanAct()
+    {
+        return m_playerModel.StatusEffectController.HasLegalAction(LegalAction.Act);
+    }
+
+    private bool __M_CanCast()
+    {
+        return m_playerModel.StatusEffectController.HasLegalAction(LegalAction.Cast);
+    }
+
+    private bool __M_CanMove()
+    {
+        return m_playerModel.StatusEffectController.HasLegalAction(LegalAction.Move);
     }
 
     private IEnumerator __M_Jump()
@@ -264,6 +283,14 @@ public class PlayerController : MonoBehaviour
         --model.JumpCount;
         model.JumpPressed = false;
         m_behaviourTree.graph.blackboard.SetVariableValue("Jump Pressed", model.JumpPressed);
+    }
+
+    private IEnumerator __M_Melee()
+    {
+        m_rigidbody.velocity = Vector3.zero;
+        m_behaviourTree.graph.blackboard.SetVariableValue("Melee Pressed", true);
+        yield return new WaitForSeconds(0.25f);
+        m_behaviourTree.graph.blackboard.SetVariableValue("Melee Pressed", false);
     }
 
     #endregion

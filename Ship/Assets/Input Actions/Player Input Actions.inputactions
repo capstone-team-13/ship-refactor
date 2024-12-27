@@ -78,12 +78,12 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Energy Boost",
+                    "name": "Healing Boost",
                     "type": "Button",
                     "id": "55a40d13-690e-4f49-a3be-5497db5f3a6c",
                     "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
+                    "interactions": "Hold",
                     "initialStateCheck": false
                 },
                 {
@@ -269,7 +269,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
-                    "action": "Energy Boost",
+                    "action": "Healing Boost",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

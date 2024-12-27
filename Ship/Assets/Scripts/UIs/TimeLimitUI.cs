@@ -4,7 +4,6 @@ using UnityEngine;
 public class TimeLimitUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text m_minuteText;
-
     [SerializeField] private TMP_Text m_secondText;
 
     private void OnEnable()

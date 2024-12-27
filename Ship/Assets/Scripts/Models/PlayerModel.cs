@@ -5,12 +5,13 @@ using ModiBuff.Core.Units.Interfaces.NonGeneric;
 using UnityEngine;
 using IDamagable = ModiBuff.Core.Units.Interfaces.NonGeneric.IDamagable;
 
-public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwner, IModifierApplierOwner,
-    IManaOwner, IDamagable, IHealable, IKillable
+public class PlayerModel : MonoBehaviour, IModifierOwner, IModifierApplierOwner,
+    IStatusEffectOwner<LegalAction, StatusEffectType>,
+    IDamagable, IHealable, IKillable, IManaOwner, IManaGrowable
 {
     public ModifierController ModifierController { get; private set; }
 
-    public ISingleInstanceStatusEffectController<LegalAction, StatusEffectType> StatusEffectController
+    public IMultiInstanceStatusEffectController<LegalAction, StatusEffectType> StatusEffectController
     {
         get;
         private set;
@@ -31,6 +32,8 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
         set => m_maxHealth = value;
     }
 
+    public bool IsDead { get; set; }
+
     [Header("Mana")]
     [SerializeField]
     [Tooltip("The player's current mana. Used to set the initial mana value at the start of the game.")]
@@ -38,18 +41,6 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
 
     [SerializeField] [Tooltip("The player's maximum mana. Determines the upper limit for the mana pool.")]
     private float m_maxMana;
-
-    [Header("Movement")] public float Speed;
-    public Vector3 Direction;
-
-    [Header("Jump")] public int MaxJumpCount;
-    public int JumpCount { get; set; }
-    public Vector3 JumpForce { get; set; }
-    public Vector3 MaxJumpForce;
-    [Range(0f, 1f)] public float JumpForceDecayRate = 0.5f;
-    public bool JumpPressed { get; set; }
-
-    [Header("Melee")] public float MeleeRadius = 3.0f;
 
     public float Mana
     {
@@ -63,43 +54,17 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
         private set => m_maxMana = value;
     }
 
-    public bool IsDead { get; set; }
+    [Header("Movement")] public float Speed;
+    public Vector3 Direction;
 
-    public float TakeDamage(float damage, IUnit source)
-    {
-        if (IsDead) return 0;
+    [Header("Jump")] public int MaxJumpCount;
+    public int JumpCount { get; set; }
+    public Vector3 JumpForce { get; set; }
+    public Vector3 MaxJumpForce;
+    [Range(0f, 1f)] public float JumpForceDecayRate = 0.5f;
+    public bool JumpPressed { get; set; }
 
-        float initialHealth = Health;
-        Health -= damage;
-        Health = Mathf.Max(Health, 0);
-
-        if (Health <= 0)
-        {
-            IsDead = true;
-            ModifierControllerPool.Instance.Return(ModifierController);
-        }
-
-        float effectiveDamage = initialHealth - Health;
-        return effectiveDamage;
-    }
-
-    public float Heal(float healAmount, IUnit source)
-    {
-        if (IsDead) return 0;
-
-        float initialHealth = Health;
-        Health += healAmount;
-        Health = Mathf.Min(Health, MaxHealth);
-
-        float effectiveHealing = Health - initialHealth;
-
-        return effectiveHealing;
-    }
-
-    public void UseMana(float value)
-    {
-        throw new System.NotImplementedException();
-    }
+    [Header("Melee")] public float MeleeRadius = 3.0f;
 
     #region Unity Callbacks
 
@@ -108,7 +73,6 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
     {
         LevelManager.PlayerEventBus.SubscribeToTarget<PlayerMoveEvent>(gameObject, OnPlayerMoved);
     }
-
 
     [UsedImplicitly]
     private void OnDisable()
@@ -131,20 +95,117 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
             throw new UnityException(errorMessage);
         }
 
-        StatusEffectController = new StatusEffectController();
+        StatusEffectController = new MultiInstanceStatusEffectController(this);
 
+        __M_AddAppliers();
+
+        // Mana Grow
+        ModifierManager modifierManager = ModifierManager.Instance;
+        this.TryCast(modifierManager.GetModifierId(Buffs.Mana.NATURAL_GROW), this);
         ResetJumpCount();
+
+        Health = 0;
+    }
+
+    [UsedImplicitly]
+    private void Start()
+    {
+        __M_RaiseInitialEvents();
     }
 
     [UsedImplicitly]
     private void Update()
     {
+        try
+        {
+            // Call the problematic method in the DLL
+            StatusEffectController.Update(Time.deltaTime);
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            // In .NET versions lower than 5.0, modifying the values of a Dictionary
+            // while iterating through it using foreach can also trigger an InvalidOperationException.
+            // This happens because the Dictionary internally maintains a version number (version),
+            // which increments on any modification (including updating values).
+            // If the version changes during enumeration, an InvalidOperationException is thrown.
+            Debug.LogWarning($"Caught an exception during Update: {ex.Message}");
+        }
+
         ModifierController.Update(Time.deltaTime);
         ModifierApplierController.Update(Time.deltaTime);
-        StatusEffectController.Update(Time.deltaTime);
+    }
+
+    [UsedImplicitly]
+    private void OnDestroy()
+    {
+        ModifierControllerPool.Instance.Return(ModifierController);
+        ModifierControllerPool.Instance.ReturnApplier(ModifierApplierController);
     }
 
     #endregion
+
+    #region API
+
+    public float TakeDamage(float damage, IUnit source)
+    {
+        if (IsDead) return 0;
+
+        float initialHealth = Health;
+        Health -= damage;
+        Health = Mathf.Max(Health, 0);
+
+        if (Health <= 0)
+        {
+            IsDead = true;
+            ModifierControllerPool.Instance.Return(ModifierController);
+        }
+
+        float effectiveDamage = initialHealth - Health;
+
+        LevelManager.PlayerEventBus.Raise(new PlayerHealthChanged(Health, MaxHealth), gameObject, gameObject);
+
+        return effectiveDamage;
+    }
+
+    public float Heal(float healAmount, IUnit source)
+    {
+        if (IsDead) return 0;
+
+        float initialHealth = Health;
+        Health += healAmount;
+        Health = Mathf.Min(Health, MaxHealth);
+
+        float effectiveHealing = Health - initialHealth;
+
+        LevelManager.PlayerEventBus.Raise(new PlayerHealthChanged(Health, MaxHealth), gameObject, gameObject);
+
+        return effectiveHealing;
+    }
+
+    public void UseMana(float value)
+    {
+        if (IsDead) return;
+
+        Mana -= value;
+        Mana = Mathf.Max(Mana, 0);
+
+        LevelManager.PlayerEventBus.Raise(new PlayerManaChanged(Mana, MaxMana), gameObject, gameObject);
+    }
+
+    public float GrowMana(float manaAmount, IUnit source)
+    {
+        if (IsDead) return 0;
+
+        float initialMana = Mana;
+        Mana += manaAmount;
+        Mana = Mathf.Min(Mana, MaxMana);
+
+        float effectiveManaGrowing = Mana - initialMana;
+
+        LevelManager.PlayerEventBus.Raise(new PlayerManaChanged(Mana, MaxMana), gameObject, gameObject);
+
+        return effectiveManaGrowing;
+    }
 
     public void ResetJumpCount()
     {
@@ -159,11 +220,32 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, ISingleStatusEffectOwn
         JumpPressed = true;
     }
 
+    #endregion
+
     #region Event Handlers
 
     private void OnPlayerMoved(ref PlayerMoveEvent eventData, GameObject target, GameObject source)
     {
         Direction = eventData.Direction;
+    }
+
+    #endregion
+
+    #region Internal
+
+    private void __M_AddAppliers()
+    {
+        ModifierManager modifierManager = ModifierManager.Instance;
+        IModifierApplierOwner applierOwner = this;
+
+        modifierManager.TryAddApplierByName(ref applierOwner, Casts.VITAL_SURGE, ApplierType.Cast, true);
+        modifierManager.TryAddApplierByName(ref applierOwner, Buffs.Mana.NATURAL_GROW, ApplierType.Cast);
+    }
+
+    private void __M_RaiseInitialEvents()
+    {
+        LevelManager.PlayerEventBus.Raise(new PlayerHealthChanged(Health, MaxHealth), gameObject, gameObject);
+        LevelManager.PlayerEventBus.Raise(new PlayerManaChanged(Mana, MaxMana), gameObject, gameObject);
     }
 
     #endregion
