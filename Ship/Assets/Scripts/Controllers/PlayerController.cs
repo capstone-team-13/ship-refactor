@@ -67,6 +67,11 @@ public class PlayerController : MonoBehaviour
 
             m_playerInput.actions[PlayerActions.HEALING_BOOST].performed += OnHealBoostPerformed;
         }
+
+        // TODO: Call when shooter swithed
+        m_behaviourTree.graph.blackboard.SetVariableValue("Reloading Time", m_playerModel.Shooter.ReloadingTime);
+
+        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerReloadedEvent>(gameObject, OnPlayerReloaded);
     }
 
     [UsedImplicitly]
@@ -88,6 +93,8 @@ public class PlayerController : MonoBehaviour
 
             m_playerInput.actions[PlayerActions.HEALING_BOOST].performed -= OnHealBoostPerformed;
         }
+
+        LevelManager.PlayerEventBus.UnsubscribeFromTarget<PlayerReloadedEvent>(gameObject, OnPlayerReloaded);
     }
 
     [UsedImplicitly]
@@ -127,10 +134,17 @@ public class PlayerController : MonoBehaviour
         Vector3 newVelocity = model.Direction * model.Speed;
         newVelocity.y = m_rigidbody.velocity.y;
 
-        // m_rigidbody.velocity = newVelocity;
-
         IBlackboard blackboard = m_behaviourTree.graph.blackboard;
         blackboard.SetVariableValue("Velocity", newVelocity);
+    }
+
+    #endregion
+
+    #region API
+
+    public void Shoot()
+    {
+        m_playerModel.Shooter.Shoot();
     }
 
     #endregion
@@ -223,7 +237,11 @@ public class PlayerController : MonoBehaviour
     public void OnShootStarted(InputAction.CallbackContext context)
     {
         if (!__M_CanAct()) return;
-        m_behaviourTree.graph.blackboard.SetVariableValue("Shooting", true);
+
+        ShootController shooter = m_playerModel.Shooter;
+        IBlackboard blackboard = m_behaviourTree.graph.blackboard;
+
+        blackboard.SetVariableValue(shooter.HasEnoughAmmo ? "Shooting" : "Reloading", true);
     }
 
     public void OnShootCanceled(InputAction.CallbackContext context)
@@ -238,7 +256,13 @@ public class PlayerController : MonoBehaviour
         m_playerModel.TryCast(modifierId, m_playerModel);
     }
 
+    private void OnPlayerReloaded(ref PlayerReloadedEvent eventData, GameObject target, GameObject source)
+    {
+        m_behaviourTree.graph.blackboard.SetVariableValue("Reloading", false);
+    }
+
     #endregion
+
 
     #region Internals
 
@@ -267,7 +291,7 @@ public class PlayerController : MonoBehaviour
         PlayerModel model = m_playerModel;
         model.HandleJump();
 
-        // Reset Y Velocity
+        // ResetState Y Velocity
         Vector3 velocity = m_rigidbody.velocity;
         velocity.y = 0;
 

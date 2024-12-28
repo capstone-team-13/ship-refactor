@@ -5,7 +5,7 @@ public class PlayerStatusUI : MonoBehaviour
 {
     #region Editor API
 
-    [SerializeField] private PlayerModel m_player;
+    [SerializeField] private GameObject m_player;
     [SerializeField] private SlicedFilledImage m_healthStatus;
     [SerializeField] private SlicedFilledImage m_manaStatus;
 
@@ -18,8 +18,8 @@ public class PlayerStatusUI : MonoBehaviour
     [UsedImplicitly]
     private void OnEnable()
     {
-        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerHealthChanged>(m_player.gameObject, OnPlayerHealthChanged);
-        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerManaChanged>(m_player.gameObject, OnPlayerManaChanged);
+        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerHealthChanged>(m_player, OnPlayerHealthChanged);
+        LevelManager.PlayerEventBus.SubscribeToTarget<PlayerManaChanged>(m_player, OnPlayerManaChanged);
     }
 
     [UsedImplicitly]

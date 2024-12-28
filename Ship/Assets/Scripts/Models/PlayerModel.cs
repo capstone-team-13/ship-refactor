@@ -66,6 +66,10 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, IModifierApplierOwner,
 
     [Header("Melee")] public float MeleeRadius = 3.0f;
 
+    [Header("TryShoot")] public ShootController ShooterPrefab;
+    public ShootController Shooter { get; private set; }
+    public Transform FollowPoint;
+
     #region Unity Callbacks
 
     [UsedImplicitly]
@@ -104,7 +108,9 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, IModifierApplierOwner,
         this.TryCast(modifierManager.GetModifierId(Buffs.Mana.NATURAL_GROW), this);
         ResetJumpCount();
 
-        Health = 0;
+        Health = MaxHealth;
+
+        __M_CreateShooter();
     }
 
     [UsedImplicitly]
@@ -246,6 +252,14 @@ public class PlayerModel : MonoBehaviour, IModifierOwner, IModifierApplierOwner,
     {
         LevelManager.PlayerEventBus.Raise(new PlayerHealthChanged(Health, MaxHealth), gameObject, gameObject);
         LevelManager.PlayerEventBus.Raise(new PlayerManaChanged(Mana, MaxMana), gameObject, gameObject);
+    }
+
+    private void __M_CreateShooter()
+    {
+        Shooter = Instantiate(ShooterPrefab);
+        Shooter.Follow(FollowPoint);
+        Shooter.transform.position = FollowPoint.position;
+        Shooter.Owner = gameObject;
     }
 
     #endregion
