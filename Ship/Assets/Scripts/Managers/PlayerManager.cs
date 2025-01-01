@@ -1,3 +1,4 @@
+using EE.Interactions;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -37,26 +38,7 @@ public class PlayerManager : SingletonBehaviour<PlayerManager>
     [UsedImplicitly]
     private void Start()
     {
-        int spawnPointId = 0;
-        for (int id = 0; id < PLAYER_COUNT; id++)
-        {
-            PlayerInput player = Instantiate(m_playerPrefab, m_spawnPoints[spawnPointId].position,
-                Quaternion.identity);
-            if (player == null)
-            {
-                Debug.LogError($"Failed to instantiate player prefab for player #{id + 1}.");
-                continue;
-            }
-
-            player.name = "Player #" + (id + 1);
-
-            if (m_players.Length > id) m_players[id] = player;
-            else Debug.LogError($"Index {id} out of bounds for m_players array.");
-
-            m_players[id] = player;
-
-            spawnPointId = ++spawnPointId % m_spawnPoints.Length;
-        }
+        __M_SpawnPlayers();
 
         if (PlayerDeviceManager.Instance != null)
         {
@@ -76,6 +58,54 @@ public class PlayerManager : SingletonBehaviour<PlayerManager>
 
     private const uint PLAYER_COUNT = 2;
     private PlayerInput[] m_players = new PlayerInput[PLAYER_COUNT];
+
+    private void __M_SpawnPlayers()
+    {
+        int spawnPointId = 0;
+        for (int id = 0; id < PLAYER_COUNT; id++)
+        {
+            PlayerInput player = __M_CreatePlayer(id, spawnPointId);
+            if (player == null) continue;
+
+            __M_AssignPlayerName(player, id);
+            __M_AssignToPlayerArray(player, id);
+
+            spawnPointId = __M_GetNextSpawnPointId(spawnPointId);
+        }
+    }
+
+    private PlayerInput __M_CreatePlayer(int id, int spawnPointId)
+    {
+        PlayerInput player = Instantiate(m_playerPrefab, m_spawnPoints[spawnPointId].position, Quaternion.identity);
+        if (player == null)
+        {
+            Debug.LogError($"Failed to instantiate player prefab for player #{id + 1}.");
+        }
+
+        return player;
+    }
+
+    private static void __M_AssignPlayerName(PlayerInput player, int id)
+    {
+        player.name = "Player #" + (id + 1);
+    }
+
+    private void __M_AssignToPlayerArray(PlayerInput player, int id)
+    {
+        if (m_players.Length > id)
+        {
+            m_players[id] = player;
+        }
+        else
+        {
+            Debug.LogError($"Index {id} out of bounds for m_players array.");
+        }
+    }
+
+    private int __M_GetNextSpawnPointId(int currentSpawnPointId)
+    {
+        return (currentSpawnPointId + 1) % m_spawnPoints.Length;
+    }
 
     #endregion
 }

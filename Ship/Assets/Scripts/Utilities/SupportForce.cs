@@ -9,8 +9,6 @@ public class SupportForce : MonoBehaviour
     [SerializeField] private float m_dampingConstant;
     [SerializeField] private Vector3 m_targetPosition;
 
-    [SerializeField] private bool m_verticalOnly;
-
     [Header("Refs")] [SerializeField] private Rigidbody m_rigidBody;
 
     public Vector3 TargetPosition
@@ -36,12 +34,6 @@ public class SupportForce : MonoBehaviour
     {
         Vector3 currentPosition = m_rigidBody.transform.position;
         Vector3 currentVelocity = m_rigidBody.velocity;
-
-        if (m_verticalOnly)
-        {
-            m_targetPosition.x = currentPosition.x;
-            m_targetPosition.z = currentPosition.z;
-        }
 
         Vector3 springForce = m_springConstant * (m_targetPosition - currentPosition);
         Vector3 convergenceForce = m_dampingConstant * (Vector3.zero - currentVelocity);

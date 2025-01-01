@@ -20,6 +20,7 @@ public class LevelManager : SingletonBehaviour<LevelManager>
 
     public static GenericEventBus<IEvent> EventBus { get; } = new();
     public static GenericEventBus<IEvent, GameObject> PlayerEventBus { get; } = new();
+    public static GenericEventBus<IEvent, GameObject> ShipEventBus { get; } = new();
 
     #endregion
 

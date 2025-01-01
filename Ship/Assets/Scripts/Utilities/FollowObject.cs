@@ -9,7 +9,6 @@ public class FollowObject : MonoBehaviour
 
     [SerializeField] private Vector3 m_offset;
     [SerializeField] private float m_followSpeed = 5f;
-    [SerializeField] private float m_dampingTime = 0.1f;
 
     public Transform Target
     {
@@ -27,7 +26,6 @@ public class FollowObject : MonoBehaviour
     private void Update()
     {
         Vector3 targetPosition = m_target.position + m_offset;
-        transform.position =
-            Vector3.SmoothDamp(transform.position, targetPosition, ref m_velocity, m_dampingTime, m_followSpeed);
+        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * m_followSpeed);
     }
 }

@@ -1,3 +1,4 @@
+using EE.Interactions;
 using JetBrains.Annotations;
 using ModiBuff.Core;
 using ModiBuff.Core.Units;
@@ -5,6 +6,7 @@ using NodeCanvas.BehaviourTrees;
 using NodeCanvas.Framework;
 using System.Collections;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Vector2 = UnityEngine.Vector2;
@@ -44,6 +46,9 @@ public class PlayerController : MonoBehaviour
 
     private GameObject m_pickedObject;
 
+    [Header("Interactions")] [SerializeField]
+    private Interactor m_interactor;
+
     #endregion
 
     #region Unity Callbacks
@@ -72,7 +77,10 @@ public class PlayerController : MonoBehaviour
         m_behaviourTree.graph.blackboard.SetVariableValue("Reloading Time", m_playerModel.Shooter.ReloadingTime);
 
         LevelManager.PlayerEventBus.SubscribeToTarget<PlayerReloadedEvent>(gameObject, OnPlayerReloaded);
+        LevelManager.ShipEventBus.SubscribeToSource<RudderControlStartedEvent>(gameObject, OnRudderControlStarted);
+        LevelManager.ShipEventBus.SubscribeToSource<RudderControlEndedEvent>(gameObject, OnRudderControlEnded);
     }
+
 
     [UsedImplicitly]
     private void OnDisable()
@@ -95,6 +103,8 @@ public class PlayerController : MonoBehaviour
         }
 
         LevelManager.PlayerEventBus.UnsubscribeFromTarget<PlayerReloadedEvent>(gameObject, OnPlayerReloaded);
+        LevelManager.ShipEventBus.UnsubscribeFromSource<RudderControlStartedEvent>(gameObject, OnRudderControlStarted);
+        LevelManager.ShipEventBus.UnsubscribeFromSource<RudderControlEndedEvent>(gameObject, OnRudderControlEnded);
     }
 
     [UsedImplicitly]
@@ -136,6 +146,12 @@ public class PlayerController : MonoBehaviour
 
         IBlackboard blackboard = m_behaviourTree.graph.blackboard;
         blackboard.SetVariableValue("Velocity", newVelocity);
+
+        if (m_controlledShip != null)
+        {
+            transform.position = m_rudderControlPoint.position;
+            transform.rotation = m_rudderControlPoint.rotation;
+        }
     }
 
     #endregion
@@ -160,18 +176,27 @@ public class PlayerController : MonoBehaviour
 
         var rawInput = value.Get<Vector2>();
 
-        Vector3 cameraForward = m_cameraTransform.forward;
-        Vector3 cameraRight = m_cameraTransform.right;
+        if (m_controlledShip != null)
+        {
+            var deltaX = rawInput.x;
+            gameObject.transform.position = m_rudderControlPoint.position;
+            LevelManager.ShipEventBus.Raise(new ShipSteeredEvent(deltaX), m_controlledShip, gameObject);
+        }
+        else
+        {
+            Vector3 cameraForward = m_cameraTransform.forward;
+            Vector3 cameraRight = m_cameraTransform.right;
 
-        cameraForward.y = 0;
-        cameraRight.y = 0;
+            cameraForward.y = 0;
+            cameraRight.y = 0;
 
-        cameraForward.Normalize();
-        cameraRight.Normalize();
+            cameraForward.Normalize();
+            cameraRight.Normalize();
 
-        Vector3 inputDirection = cameraRight * rawInput.x + cameraForward * rawInput.y;
+            Vector3 inputDirection = cameraRight * rawInput.x + cameraForward * rawInput.y;
 
-        LevelManager.PlayerEventBus.Raise(new PlayerMoveEvent { Direction = inputDirection }, gameObject, null);
+            LevelManager.PlayerEventBus.Raise(new PlayerMoveEvent { Direction = inputDirection }, gameObject, null);
+        }
     }
 
     // Handles the OnLook event triggered by continuous input.
@@ -211,14 +236,17 @@ public class PlayerController : MonoBehaviour
 
     public void OnPickOrThrowPerformed(InputAction.CallbackContext context)
     {
-        if (m_pickedObject == null && __M_CanAct())
-        {
-            Debug.Log("Picked");
-        }
-        else
-        {
-            Debug.Log("Throw");
-        }
+        // if (m_pickedObject == null && __M_CanAct())
+        // {
+        //     Debug.Log("Picked");
+        // }
+        // else
+        // {
+        //     Debug.Log("Throw");
+        // }
+
+        if (!__M_CanAct()) return;
+        m_interactor.TryInteract();
     }
 
     public void OnShieldStarted(InputAction.CallbackContext context)
@@ -261,10 +289,29 @@ public class PlayerController : MonoBehaviour
         m_behaviourTree.graph.blackboard.SetVariableValue("Reloading", false);
     }
 
+    private void OnRudderControlStarted(ref RudderControlStartedEvent eventData, GameObject target, GameObject source)
+    {
+        m_controlledShip = target;
+        m_rudderControlPoint = eventData.RudderControlPoint;
+
+        m_behaviourTree.graph.blackboard.SetVariableValue("Driving", true);
+    }
+
+    private void OnRudderControlEnded(ref RudderControlEndedEvent eventData, GameObject target, GameObject source)
+    {
+        m_controlledShip = null;
+        m_rudderControlPoint = null;
+        m_rigidbody.velocity = Vector3.zero;
+
+        m_behaviourTree.graph.blackboard.SetVariableValue("Driving", false);
+    }
+
     #endregion
 
-
     #region Internals
+
+    private GameObject m_controlledShip;
+    private Transform m_rudderControlPoint;
 
     private bool __M_CanJump()
     {

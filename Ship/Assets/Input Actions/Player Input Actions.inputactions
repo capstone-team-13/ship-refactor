@@ -198,6 +198,17 @@
                 },
                 {
                     "name": "",
+                    "id": "93367023-d038-4f18-b2dc-b31e12809f39",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard Mouse",
+                    "action": "Melee",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "93e76957-d764-4125-b945-3017daa2935c",
                     "path": "<Gamepad>/buttonSouth",
                     "interactions": "",
@@ -225,6 +236,17 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
+                    "action": "Pick or Throw",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4aa938de-36a1-488a-834d-0fe78ed2a39e",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
                     "action": "Pick or Throw",
                     "isComposite": false,
                     "isPartOfComposite": false
