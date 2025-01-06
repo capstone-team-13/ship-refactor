@@ -102,6 +102,9 @@ public class PlayerDeviceManager : SingletonBehaviour<PlayerDeviceManager>
         if (index == -1) return;
 
         m_connectedDevices[index] = null;
+
+        LevelManager.PlayerEventBus.Raise(new PlayerExitedEvent(index, device), null, gameObject);
+
         Debug.Log($"{device.name} Left! (ID: {index})");
     }
 
@@ -119,6 +122,9 @@ public class PlayerDeviceManager : SingletonBehaviour<PlayerDeviceManager>
         }
 
         m_connectedDevices[index] = device;
+
+        LevelManager.PlayerEventBus.Raise(new PlayerJoinedEvent(index, device), null, gameObject);
+
         Debug.Log($"{device.name} Joined! (ID: {index})");
     }
 
